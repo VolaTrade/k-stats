@@ -13,13 +13,13 @@ type (
 		Env  string
 	}
 
-	Kstats struct {
+	Stats struct {
 		client statsd.Statter
 		cfg    *Config
 	}
 )
 
-func New(cfg *Config) (*Kstats, error) {
+func New(cfg *Config) (*Stats, error) {
 	conf := &statsd.ClientConfig{
 		Address: fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
 		Prefix:  cfg.Env,
@@ -29,17 +29,17 @@ func New(cfg *Config) (*Kstats, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Kstats{client: client, cfg: cfg}, nil
+	return &Stats{client: client, cfg: cfg}, nil
 }
 
-func (st *Kstats) Increment(name string, value int64) error {
+func (st *Stats) Increment(name string, value int64) error {
 	if st.cfg.Env == "DEV" {
 		return nil
 	}
 	return st.client.Inc(name, value, 1.0)
 }
 
-func (st *Kstats) Gauge(name string, value int64) error {
+func (st *Stats) Gauge(name string, value int64) error {
 	if st.cfg.Env == "DEV" {
 		return nil
 	}
