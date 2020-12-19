@@ -2,8 +2,8 @@ package stats_test
 
 import (
 	"os"
-	"fmt"
 	"testing"
+
 	"github.com/stretchr/testify/assert"
 	stats "github.com/volatrade/k-stats"
 )
@@ -19,7 +19,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestGauge(t *testing.T) {
-	fmt.Printf("CFG ---> %+v", cfg)
 	vc, err := stats.New(cfg)
 	assert.Nil(t, err)
 
