@@ -13,7 +13,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	cfg = &stats.Config{Host: "localhost", Port: 9125, Env: "Dev"}
+	cfg = &stats.Config{Host: "localhost", Port: 8125, Env: "Dev"}
 	retCode := m.Run()
 	os.Exit(retCode)
 }

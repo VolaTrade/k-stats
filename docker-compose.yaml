@@ -8,6 +8,7 @@ graphite:
     - "2024:2024"
     - "7002:7002"
     - "8080:8080"
+    - "8125:8125"
     - "9001:9001"
   volumes:
     - ./data/conf:/opt/graphite/conf
