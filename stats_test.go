@@ -1,6 +1,7 @@
 package stats_test
 
 import (
+	"errors"
 	"os"
 	"testing"
 
@@ -13,7 +14,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	cfg = &stats.Config{Host: "localhost", Port: 8125, Env: "Dev"}
+	cfg = &stats.Config{Env: "Dev", Host: "localhost", Port: 8125, Service: "testservice"}
 	retCode := m.Run()
 	os.Exit(retCode)
 }
@@ -31,4 +32,14 @@ func TestIncrement(t *testing.T) {
 	assert.Nil(t, err)
 	err1 := st.Increment("increment.testing", 1)
 	assert.Nil(t, err1)
+}
+
+func TestClone(t *testing.T) {
+	st, err := stats.New(cfg)
+	stClone, err := stats.Clone(st)
+	assert.Nil(t, err)
+	if stClone.Client == nil {
+		err = errors.New("failed to clone client")
+	}
+	assert.Nil(t, err)
 }
