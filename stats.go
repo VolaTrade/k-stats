@@ -34,7 +34,14 @@ func New(cfg *Config) (*Stats, error) {
 	return &Stats{Client: client, cfg: cfg}, nil
 }
 
+func NewNoop(cfg *Config) (*Stats, error) {
+	return nil, nil
+}
+
 func Clone(st *Stats) (*Stats, error) {
+	if st == nil {
+		return nil, nil
+	}
 	st, err := New(st.cfg)
 	if err != nil {
 		return nil, err
@@ -42,16 +49,46 @@ func Clone(st *Stats) (*Stats, error) {
 	return st, nil
 }
 
-func (st *Stats) Increment(name string, value int64) error {
+func (st *Stats) Count(stat string, value int64) error {
+	if st == nil {
+		return nil
+	}
+
 	if st.cfg.Env == "DEV" {
 		return nil
 	}
-	return st.Client.Inc(name, value, 1.0)
+	return st.Client.Inc(stat, value, 1.0)
 }
 
-func (st *Stats) Gauge(name string, value int64) error {
+func (st *Stats) Increment(stat string, value int64) error {
+	if st == nil {
+		return nil
+	}
+
 	if st.cfg.Env == "DEV" {
 		return nil
 	}
-	return st.Client.Gauge(name, value, 1.0)
+	return st.Client.Inc(stat, value, 1.0)
+}
+
+func (st *Stats) Gauge(stat string, value int64) error {
+	if st == nil {
+		return nil
+	}
+
+	if st.cfg.Env == "DEV" {
+		return nil
+	}
+	return st.Client.Gauge(stat, value, 1.0)
+}
+
+func (st *Stats) Timing(stat string, delta int64) error {
+	if st == nil {
+		return nil
+	}
+
+	if st.cfg.Env == "DEV" {
+		return nil
+	}
+	return st.Client.Timing(stat, delta, 1.0)
 }
