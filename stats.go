@@ -22,9 +22,10 @@ type (
 )
 
 func New(cfg *Config) (*Stats, error) {
+
 	conf := &statsd.ClientConfig{
 		Address: strings.ToLower(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)),
-		Prefix:  strings.ToLower(fmt.Sprintf("%s:%s", cfg.Env, cfg.Service)),
+		Prefix:  strings.ToLower(fmt.Sprintf("%s.%s", cfg.Env, cfg.Service)),
 	}
 	println("creating stats connection to ->", conf.Address)
 	client, err := statsd.NewClientWithConfig(conf)
