@@ -3,6 +3,7 @@ package stats
 import (
 	"fmt"
 	"strings"
+	"log"
 
 	"github.com/cactus/go-statsd-client/v4/statsd"
 )
@@ -21,7 +22,7 @@ type (
 	}
 )
 
-func New(cfg *Config) (*Stats, error) {
+func New(cfg *Config) (*Stats, func(), error) {
 
 	conf := &statsd.ClientConfig{
 		Address: strings.ToLower(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)),
@@ -30,24 +31,33 @@ func New(cfg *Config) (*Stats, error) {
 	println("creating stats connection to ->", conf.Address)
 	client, err := statsd.NewClientWithConfig(conf)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return &Stats{Client: client, cfg: cfg}, nil
+	end := func() {
+
+		if client != nil {
+			if err := client.Close(); err != nil {
+				log.Fatalf("Error syncing logger: %v", err)
+			}
+		}
+	}
+
+	return &Stats{Client: client, cfg: cfg}, end, nil
 }
 
 func NewNoop(cfg *Config) (*Stats, error) {
 	return nil, nil
 }
 
-func Clone(st *Stats) (*Stats, error) {
+func Clone(st *Stats) (*Stats, func(), error) {
 	if st == nil {
-		return nil, nil
+		return nil, nil, nil
 	}
-	st, err := New(st.cfg)
+	st, end, err := New(st.cfg)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return st, nil
+	return st, end, nil
 }
 
 func (st *Stats) Count(stat string, value int64) error {
