@@ -21,13 +21,14 @@ func TestMain(m *testing.M) {
 
 func TestClone(t *testing.T) {
 	st, end, err := stats.New(cfg)
-	stClone, end, err := stats.Clone(st)
+	stClone, end1, err := stats.Clone(st)
 	assert.Nil(t, err)
 	if stClone.Client == nil {
 		err = errors.New("failed to clone client")
 	}
 	assert.Nil(t, err)
 	end()
+	end1()
 }
 
 func TestCount(t *testing.T) {
