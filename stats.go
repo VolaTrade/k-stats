@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"log"
+	"time"
 
 	"github.com/cactus/go-statsd-client/v4/statsd"
 )
@@ -28,7 +29,7 @@ func New(cfg *Config) (*Stats, func(), error) {
 		Address: strings.ToLower(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)),
 		Prefix:  strings.ToLower(fmt.Sprintf("%s.%s", cfg.Env, cfg.Service)),
 	}
-	println("creating stats connection to ->", conf.Address)
+	log.Println("creating stats connection to ->", conf.Address)
 	client, err := statsd.NewClientWithConfig(conf)
 	if err != nil {
 		return nil, nil, err
@@ -37,8 +38,9 @@ func New(cfg *Config) (*Stats, func(), error) {
 
 		if client != nil {
 			if err := client.Close(); err != nil {
-				log.Fatalf("Error creating new stats client: %v", err)
+				log.Fatalf("Error closing new stats client: %v", err)
 			}
+			log.Println("K-stats client successful shutdown")
 		}
 	}
 
@@ -46,25 +48,28 @@ func New(cfg *Config) (*Stats, func(), error) {
 }
 
 func NewNoop(cfg *Config) (*Stats, error) {
-	return nil, nil
+	return &Stats{Client: nil, cfg: &Config{Env: "DEV"}}, nil
 }
 
-func Clone(st *Stats) (*Stats, func(), error) {
-	if st == nil {
-		return nil, nil, nil
+func Clone(st *Stats) (*Stats, error) {
+	conf := &statsd.ClientConfig{
+		Address: fmt.Sprintf("%s:%d", st.cfg.Host, st.cfg.Port),
+		Prefix:  fmt.Sprintf("%s.%s", st.cfg.Env,st. cfg.Service),
 	}
-	st, end, err := New(st.cfg)
+	if st.cfg.Env == "DEV" {
+		return nil, nil
+	}
+
+	log.Println("creating stats connection to ->", conf.Address)
+	client, err := statsd.NewClientWithConfig(conf)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return st, end, nil
+
+	return &Stats{Client: client, cfg: st.cfg}, nil
 }
 
 func (st *Stats) Count(stat string, value int64) error {
-	if st == nil {
-		return nil
-	}
-
 	if st.cfg.Env == "DEV" {
 		return nil
 	}
@@ -72,10 +77,6 @@ func (st *Stats) Count(stat string, value int64) error {
 }
 
 func (st *Stats) Gauge(stat string, value int64) error {
-	if st == nil {
-		return nil
-	}
-
 	if st.cfg.Env == "DEV" {
 		return nil
 	}
@@ -83,10 +84,6 @@ func (st *Stats) Gauge(stat string, value int64) error {
 }
 
 func (st *Stats) Increment(stat string, value int64) error {
-	if st == nil {
-		return nil
-	}
-
 	if st.cfg.Env == "DEV" {
 		return nil
 	}
@@ -94,12 +91,15 @@ func (st *Stats) Increment(stat string, value int64) error {
 }
 
 func (st *Stats) Timing(stat string, delta int64) error {
-	if st == nil {
-		return nil
-	}
-
 	if st.cfg.Env == "DEV" {
 		return nil
 	}
 	return st.Client.Timing(stat, delta, 1.0)
+}
+
+func (st *Stats) TimingDuration(stat string, delta time.Duration) error {
+	if st.cfg.Env == "DEV" {
+		return nil
+	}
+	return st.Client.TimingDuration(stat, delta, 1.0)
 }

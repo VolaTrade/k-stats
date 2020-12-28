@@ -14,7 +14,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	cfg = &stats.Config{Env: "Dev", Host: "localhost", Port: 8125, Service: "testservice"}
+	cfg = &stats.Config{Env: "INTEG", Host: "localhost", Port: 8125, Service: "testservice"}
 	retCode := m.Run()
 	os.Exit(retCode)
 }
@@ -23,7 +23,7 @@ func TestClone(t *testing.T) {
 	st, end, err := stats.New(cfg)
 	assert.Nil(t, err)
 
-	stClone, end1, err1 := stats.Clone(st)
+	stClone, err1 := stats.Clone(st)
 	assert.Nil(t, err1)
 	
 	if stClone.Client == nil {
@@ -31,7 +31,6 @@ func TestClone(t *testing.T) {
 	}
 	assert.Nil(t, err)
 	end()
-	end1()
 }
 
 func TestCount(t *testing.T) {
