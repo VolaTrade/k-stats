@@ -37,7 +37,7 @@ func New(cfg *Config) (*Stats, func(), error) {
 
 		if client != nil {
 			if err := client.Close(); err != nil {
-				log.Fatalf("Error syncing logger: %v", err)
+				log.Fatalf("Error creating new stats client: %v", err)
 			}
 		}
 	}
@@ -71,17 +71,6 @@ func (st *Stats) Count(stat string, value int64) error {
 	return st.Client.Inc(stat, value, 1.0)
 }
 
-func (st *Stats) Increment(stat string, value int64) error {
-	if st == nil {
-		return nil
-	}
-
-	if st.cfg.Env == "DEV" {
-		return nil
-	}
-	return st.Client.Inc(stat, value, 1.0)
-}
-
 func (st *Stats) Gauge(stat string, value int64) error {
 	if st == nil {
 		return nil
@@ -91,6 +80,17 @@ func (st *Stats) Gauge(stat string, value int64) error {
 		return nil
 	}
 	return st.Client.Gauge(stat, value, 1.0)
+}
+
+func (st *Stats) Increment(stat string, value int64) error {
+	if st == nil {
+		return nil
+	}
+
+	if st.cfg.Env == "DEV" {
+		return nil
+	}
+	return st.Client.Inc(stat, value, 1.0)
 }
 
 func (st *Stats) Timing(stat string, delta int64) error {

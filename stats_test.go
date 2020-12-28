@@ -19,27 +19,46 @@ func TestMain(m *testing.M) {
 	os.Exit(retCode)
 }
 
-func TestGauge(t *testing.T) {
-	st, err := stats.New(cfg)
-	assert.Nil(t, err)
-
-	err1 := st.Gauge("gauge.testing", 3)
-	assert.Nil(t, err1)
-}
-
-func TestIncrement(t *testing.T) {
-	st, err := stats.New(cfg)
-	assert.Nil(t, err)
-	err1 := st.Increment("increment.testing", 1)
-	assert.Nil(t, err1)
-}
-
 func TestClone(t *testing.T) {
-	st, err := stats.New(cfg)
-	stClone, err := stats.Clone(st)
+	st, end, err := stats.New(cfg)
+	stClone, end, err := stats.Clone(st)
 	assert.Nil(t, err)
 	if stClone.Client == nil {
 		err = errors.New("failed to clone client")
 	}
 	assert.Nil(t, err)
+	end()
+}
+
+func TestCount(t *testing.T) {
+	st, end, err := stats.New(cfg)
+	assert.Nil(t, err)
+	err1 := st.Count("count.testing", 4)
+	assert.Nil(t, err1)
+	end()
+}
+
+func TestGauge(t *testing.T) {
+	st, end, err := stats.New(cfg)
+	assert.Nil(t, err)
+
+	err1 := st.Gauge("gauge.testing", 3)
+	assert.Nil(t, err1)
+	end()
+}
+
+func TestIncrement(t *testing.T) {
+	st, end, err := stats.New(cfg)
+	assert.Nil(t, err)
+	err1 := st.Increment("increment.testing", 1)
+	assert.Nil(t, err1)
+	end()
+}
+
+func TestTiming(t *testing.T) {
+	st, end, err := stats.New(cfg)
+	assert.Nil(t, err)
+	err1 := st.Timing("timing.testing", 2000)
+	assert.Nil(t, err1)
+	end()
 }
