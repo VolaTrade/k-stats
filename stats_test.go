@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	stats "github.com/volatrade/k-stats"
@@ -62,6 +63,14 @@ func TestTiming(t *testing.T) {
 	st, end, err := stats.New(cfg)
 	assert.Nil(t, err)
 	err1 := st.Timing("timing.testing", 2000)
+	assert.Nil(t, err1)
+	end()
+}
+
+func TestTimingDuration(t *testing.T) {
+	st, end, err := stats.New(cfg)
+	assert.Nil(t, err)
+	err1 := st.TimingDuration("timing.testing", time.Second * 2)
 	assert.Nil(t, err1)
 	end()
 }
