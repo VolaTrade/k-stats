@@ -21,8 +21,11 @@ func TestMain(m *testing.M) {
 
 func TestClone(t *testing.T) {
 	st, end, err := stats.New(cfg)
-	stClone, end1, err := stats.Clone(st)
 	assert.Nil(t, err)
+
+	stClone, end1, err1 := stats.Clone(st)
+	assert.Nil(t, err1)
+	
 	if stClone.Client == nil {
 		err = errors.New("failed to clone client")
 	}
