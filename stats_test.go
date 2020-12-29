@@ -27,8 +27,9 @@ func TestClone(t *testing.T) {
 	stClone, err1 := stats.Clone(st)
 	assert.Nil(t, err1)
 	
-	if stClone.Client == nil {
+	if stClone.IsClientNil() == true {
 		err = errors.New("failed to clone client")
+		print("failed to clone client")
 	}
 	assert.Nil(t, err)
 	end()

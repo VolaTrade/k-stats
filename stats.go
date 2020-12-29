@@ -32,7 +32,7 @@ func New(cfg *Config) (*Stats, func(), error) {
 	log.Println("creating stats connection to ->", conf.Address)
 	client, err := statsd.NewClientWithConfig(conf)
 	if err != nil {
-		return &Stats{client: nil, cfg: &Config{Env: "DEV"}}, nil, nil
+		return nil, nil, err
 	}
 	end := func() {
 
@@ -51,17 +51,22 @@ func NewNoop(cfg *Config) (*Stats, error) {
 	return &Stats{client: nil, cfg: &Config{Env: "DEV"}}, nil
 }
 
-func Clone(st *Stats) (*Stats, error) {
-	if st.cfg.Env == "DEV" {
-		return &Stats{client: nil, cfg: &Config{Env: "DEV"}}, nil
-	}
 
+func Clone(st *Stats) (*Stats, error) {
+	
 	st, _, err := New(st.cfg)
 	if err != nil {
 		return &Stats{client: nil, cfg: &Config{Env: "DEV"}}, nil
 	}
 
 	return st, nil
+}
+
+func (st *Stats) IsClientNil() bool {
+	if st.client == nil {
+		return true
+	}
+	return false
 }
 
 func (st *Stats) Count(stat string, value int64) error {
