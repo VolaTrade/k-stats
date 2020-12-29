@@ -63,10 +63,8 @@ func Clone(st *Stats) (*Stats, error) {
 }
 
 func (st *Stats) IsClientNil() bool {
-	if st.client == nil {
-		return true
-	}
-	return false
+	return st.client == nil
+	
 }
 
 func (st *Stats) Count(stat string, value int64) error {
