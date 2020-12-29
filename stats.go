@@ -18,7 +18,7 @@ type (
 	}
 
 	Stats struct {
-		Client statsd.Statter
+		client statsd.Statter
 		cfg    *Config
 	}
 )
@@ -32,7 +32,7 @@ func New(cfg *Config) (*Stats, func(), error) {
 	log.Println("creating stats connection to ->", conf.Address)
 	client, err := statsd.NewClientWithConfig(conf)
 	if err != nil {
-		return nil, nil, err
+		return &Stats{client: nil, cfg: &Config{Env: "DEV"}}, nil, nil
 	}
 	end := func() {
 
@@ -44,62 +44,57 @@ func New(cfg *Config) (*Stats, func(), error) {
 		}
 	}
 
-	return &Stats{Client: client, cfg: cfg}, end, nil
+	return &Stats{client: client, cfg: cfg}, end, nil
 }
 
 func NewNoop(cfg *Config) (*Stats, error) {
-	return &Stats{Client: nil, cfg: &Config{Env: "DEV"}}, nil
+	return &Stats{client: nil, cfg: &Config{Env: "DEV"}}, nil
 }
 
 func Clone(st *Stats) (*Stats, error) {
-	conf := &statsd.ClientConfig{
-		Address: fmt.Sprintf("%s:%d", st.cfg.Host, st.cfg.Port),
-		Prefix:  fmt.Sprintf("%s.%s", st.cfg.Env,st. cfg.Service),
-	}
 	if st.cfg.Env == "DEV" {
-		return nil, nil
+		return &Stats{client: nil, cfg: &Config{Env: "DEV"}}, nil
 	}
 
-	log.Println("creating stats connection to ->", conf.Address)
-	client, err := statsd.NewClientWithConfig(conf)
+	st, _, err := New(st.cfg)
 	if err != nil {
-		return nil, err
+		return &Stats{client: nil, cfg: &Config{Env: "DEV"}}, nil
 	}
 
-	return &Stats{Client: client, cfg: st.cfg}, nil
+	return st, nil
 }
 
 func (st *Stats) Count(stat string, value int64) error {
 	if st.cfg.Env == "DEV" {
 		return nil
 	}
-	return st.Client.Inc(stat, value, 1.0)
+	return st.client.Inc(stat, value, 1.0)
 }
 
 func (st *Stats) Gauge(stat string, value int64) error {
 	if st.cfg.Env == "DEV" {
 		return nil
 	}
-	return st.Client.Gauge(stat, value, 1.0)
+	return st.client.Gauge(stat, value, 1.0)
 }
 
 func (st *Stats) Increment(stat string, value int64) error {
 	if st.cfg.Env == "DEV" {
 		return nil
 	}
-	return st.Client.Inc(stat, value, 1.0)
+	return st.client.Inc(stat, value, 1.0)
 }
 
 func (st *Stats) Timing(stat string, delta int64) error {
 	if st.cfg.Env == "DEV" {
 		return nil
 	}
-	return st.Client.Timing(stat, delta, 1.0)
+	return st.client.Timing(stat, delta, 1.0)
 }
 
 func (st *Stats) TimingDuration(stat string, delta time.Duration) error {
 	if st.cfg.Env == "DEV" {
 		return nil
 	}
-	return st.Client.TimingDuration(stat, delta, 1.0)
+	return st.client.TimingDuration(stat, delta, 1.0)
 }
