@@ -27,7 +27,7 @@ type (
 		TimingDuration(stat string, delta time.Duration) error
 	}
 
-	Kstats struct {
+	kstats struct {
 		client statsd.Statter
 		cfg    *Config
 	}
@@ -59,10 +59,10 @@ func New(cfg *Config) (Stats, func(), error) {
 		}
 	}
 
-	return &Kstats{client: client, cfg: cfg}, end, nil
+	return &kstats{client: client, cfg: cfg}, end, nil
 }
 
-func (st *Kstats) Clone() (Stats, error) {
+func (st *kstats) Clone() (Stats, error) {
 
 	clone, _, err := New(st.cfg)
 
@@ -73,31 +73,31 @@ func (st *Kstats) Clone() (Stats, error) {
 	return clone, nil
 }
 
-func (st *Kstats) IsClientNil() bool {
+func (st *kstats) IsClientNil() bool {
 	return st.client == nil
 }
 
-func (st *Kstats) Count(stat string, value int64) error {
+func (st *kstats) Count(stat string, value int64) error {
 
 	return st.client.Inc(stat, value, 1.0)
 }
 
-func (st *Kstats) Gauge(stat string, value int64) error {
+func (st *kstats) Gauge(stat string, value int64) error {
 
 	return st.client.Gauge(stat, value, 1.0)
 }
 
-func (st *Kstats) Increment(stat string, value int64) error {
+func (st *kstats) Increment(stat string, value int64) error {
 
 	return st.client.Inc(stat, value, 1.0)
 }
 
-func (st *Kstats) Timing(stat string, delta int64) error {
+func (st *kstats) Timing(stat string, delta int64) error {
 
 	return st.client.Timing(stat, delta, 1.0)
 }
 
-func (st *Kstats) TimingDuration(stat string, delta time.Duration) error {
+func (st *kstats) TimingDuration(stat string, delta time.Duration) error {
 
 	return st.client.TimingDuration(stat, delta, 1.0)
 }
