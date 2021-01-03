@@ -26,7 +26,7 @@ func TestClone(t *testing.T) {
 
 	stClone, err1 := stats.Clone(st)
 	assert.Nil(t, err1)
-	
+
 	if stClone.IsClientNil() == true {
 		err = errors.New("failed to clone client")
 		print("failed to clone client")
@@ -71,7 +71,7 @@ func TestTiming(t *testing.T) {
 func TestTimingDuration(t *testing.T) {
 	st, end, err := stats.New(cfg)
 	assert.Nil(t, err)
-	err1 := st.TimingDuration("timing.testing", time.Second * 2)
+	err1 := st.TimingDuration("timing.testing", time.Second*2)
 	assert.Nil(t, err1)
 	end()
 }
