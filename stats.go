@@ -2,8 +2,8 @@ package stats
 
 import (
 	"fmt"
-	"strings"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/cactus/go-statsd-client/v4/statsd"
@@ -47,13 +47,15 @@ func New(cfg *Config) (*Stats, func(), error) {
 	return &Stats{client: client, cfg: cfg}, end, nil
 }
 
-func NewNoop(cfg *Config) (*Stats, error) {
-	return &Stats{client: nil, cfg: &Config{Env: "DEV"}}, nil
+func NewNoop() *Stats {
+	return &Stats{
+		client: nil,
+		cfg:    &Config{Env: "DEV"},
+	}
 }
 
-
 func Clone(st *Stats) (*Stats, error) {
-	
+
 	st, _, err := New(st.cfg)
 	if err != nil {
 		return &Stats{client: nil, cfg: &Config{Env: "DEV"}}, nil
@@ -64,7 +66,6 @@ func Clone(st *Stats) (*Stats, error) {
 
 func (st *Stats) IsClientNil() bool {
 	return st.client == nil
-	
 }
 
 func (st *Stats) Count(stat string, value int64) error {
@@ -92,6 +93,7 @@ func (st *Stats) Timing(stat string, delta int64) error {
 	if st.cfg.Env == "DEV" {
 		return nil
 	}
+
 	return st.client.Timing(stat, delta, 1.0)
 }
 
