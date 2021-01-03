@@ -24,7 +24,7 @@ func TestClone(t *testing.T) {
 	st, end, err := stats.New(cfg)
 	assert.Nil(t, err)
 
-	stClone, err1 := stats.Clone(st)
+	stClone, err1 := st.Clone()
 	assert.Nil(t, err1)
 
 	if stClone.IsClientNil() == true {
