@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cactus/go-statsd-client/v4/statsd"
+	logger "github.com/volatrade/currie-logs"
 )
 
 type (
@@ -19,21 +20,22 @@ type (
 
 	Stats interface {
 		Clone() (Stats, error)
-		Count(stat string, value int64) error
-		Gauge(stat string, value int64) error
-		Increment(stat string, value int64) error
+		Count(stat string, value int64)
+		Gauge(stat string, value int64)
+		Increment(stat string, value int64)
 		IsClientNil() bool
-		Timing(stat string, delta int64) error
-		TimingDuration(stat string, delta time.Duration) error
+		Timing(stat string, delta int64)
+		TimingDuration(stat string, delta time.Duration)
 	}
 
 	kstats struct {
 		client statsd.Statter
 		cfg    *Config
+		logger *logger.Logger
 	}
 )
 
-func New(cfg *Config) (Stats, func(), error) {
+func New(cfg *Config, logger *logger.Logger) (Stats, func(), error) {
 
 	if cfg.Env == "DEV" {
 
@@ -59,12 +61,12 @@ func New(cfg *Config) (Stats, func(), error) {
 		}
 	}
 
-	return &kstats{client: client, cfg: cfg}, end, nil
+	return &kstats{client: client, cfg: cfg, logger: logger}, end, nil
 }
 
 func (st *kstats) Clone() (Stats, error) {
 
-	clone, _, err := New(st.cfg)
+	clone, _, err := New(st.cfg, st.logger)
 
 	if err != nil {
 		return nil, err
@@ -77,27 +79,37 @@ func (st *kstats) IsClientNil() bool {
 	return st.client == nil
 }
 
-func (st *kstats) Count(stat string, value int64) error {
+func (st *kstats) Count(stat string, value int64) {
 
-	return st.client.Inc(stat, value, 1.0)
+	if err := st.client.Inc(stat, value, 1.0); err != nil {
+		st.logger.Errorw("Could not aggregate stats", "error", err.Error())
+	}
 }
 
-func (st *kstats) Gauge(stat string, value int64) error {
+func (st *kstats) Gauge(stat string, value int64) {
 
-	return st.client.Gauge(stat, value, 1.0)
+	if err := st.client.Gauge(stat, value, 1.0); err != nil {
+		st.logger.Errorw("Could not aggregate stats", "error", err.Error())
+	}
 }
 
-func (st *kstats) Increment(stat string, value int64) error {
+func (st *kstats) Increment(stat string, value int64) {
 
-	return st.client.Inc(stat, value, 1.0)
+	if err := st.client.Inc(stat, value, 1.0); err != nil {
+		st.logger.Errorw("Could not aggregate stats", "error", err.Error())
+	}
 }
 
-func (st *kstats) Timing(stat string, delta int64) error {
+func (st *kstats) Timing(stat string, delta int64) {
 
-	return st.client.Timing(stat, delta, 1.0)
+	if err := st.client.Timing(stat, delta, 1.0); err != nil {
+		st.logger.Errorw("Could not aggregate stats", "error", err.Error())
+	}
 }
 
-func (st *kstats) TimingDuration(stat string, delta time.Duration) error {
+func (st *kstats) TimingDuration(stat string, delta time.Duration) {
 
-	return st.client.TimingDuration(stat, delta, 1.0)
+	if err := st.client.TimingDuration(stat, delta, 1.0); err != nil {
+		st.logger.Errorw("Could not aggregate stats", "error", err.Error())
+	}
 }
