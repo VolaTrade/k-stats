@@ -8,5 +8,6 @@ require (
 	github.com/google/wire v0.4.0
 	github.com/stretchr/testify v1.6.1
 	github.com/tkanos/gonfig v0.0.0-20181112185242-896f3d81fadf
+	github.com/volatrade/currie-logs v1.1.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

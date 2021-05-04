@@ -2,11 +2,10 @@ package stats
 
 import (
 	"fmt"
-	"log"
-	"strings"
 	"time"
 
 	"github.com/cactus/go-statsd-client/v4/statsd"
+	logger "github.com/volatrade/currie-logs"
 )
 
 type (
@@ -19,52 +18,58 @@ type (
 
 	Stats interface {
 		Clone() (Stats, error)
-		Count(stat string, value int64) error
-		Gauge(stat string, value int64) error
-		Increment(stat string, value int64) error
+		Count(stat string, value int64)
+		Gauge(stat string, value int64)
+		Increment(stat string, value int64)
 		IsClientNil() bool
-		Timing(stat string, delta int64) error
-		TimingDuration(stat string, delta time.Duration) error
+		Timing(stat string, delta int64)
+		TimingDuration(stat string, delta time.Duration)
 	}
 
 	kstats struct {
-		client statsd.Statter
+		client statsd.StatSender
 		cfg    *Config
+		logger *logger.Logger
 	}
 )
 
-func New(cfg *Config) (Stats, func(), error) {
+func (mt *kstats) connect() error {
+	var err error
 
-	if cfg.Env == "DEV" {
-
-		return NewNoop()
+	if mt.cfg.Env == "" {
+		return fmt.Errorf("EnvService property must not be empty")
 	}
 
-	conf := &statsd.ClientConfig{
-		Address: strings.ToLower(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)),
-		Prefix:  strings.ToLower(fmt.Sprintf("%s.%s.", cfg.Env, cfg.Service)),
-	}
-	log.Println("creating stats connection to ->", conf.Address)
-	client, err := statsd.NewClientWithConfig(conf)
+	statsdAddress := fmt.Sprintf("%s:%d", mt.cfg.Host, mt.cfg.Port)
+
+	mt.logger.Infow("STATSD - initializing statsd connection", "address", statsdAddress)
+
+	mt.client, err = statsd.NewClient(statsdAddress, "test")
+
 	if err != nil {
-		return nil, nil, err
+		/* If nothing is listening on the target port, an error is returned and
+		the returned client does nothing but is still usable. So we can just log
+		the error and go on. */
+		mt.logger.Errorw("STATSD - failure when initializing statsd client", "error", err.Error())
+		return err
 	}
-	end := func() {
+	return nil
+}
 
-		if client != nil {
-			if err := client.Close(); err != nil {
-				log.Fatalf("Error closing new stats client: %v", err)
-			}
-			log.Println("K-stats client successful shutdown")
-		}
+func New(cfg *Config, logger *logger.Logger) (Stats, error) {
+	stz := &kstats{cfg: cfg, logger: logger}
+
+	if err := stz.connect(); err != nil {
+		return nil, err
+
 	}
 
-	return &kstats{client: client, cfg: cfg}, end, nil
+	return stz, nil
 }
 
 func (st *kstats) Clone() (Stats, error) {
 
-	clone, _, err := New(st.cfg)
+	clone, err := New(st.cfg, st.logger)
 
 	if err != nil {
 		return nil, err
@@ -77,27 +82,37 @@ func (st *kstats) IsClientNil() bool {
 	return st.client == nil
 }
 
-func (st *kstats) Count(stat string, value int64) error {
+func (st *kstats) Count(stat string, value int64) {
 
-	return st.client.Inc(stat, value, 1.0)
+	if err := st.client.Inc(stat, value, 1.0); err != nil {
+		st.logger.Errorw("Could not aggregate stats", "error", err.Error())
+	}
 }
 
-func (st *kstats) Gauge(stat string, value int64) error {
+func (st *kstats) Gauge(stat string, value int64) {
 
-	return st.client.Gauge(stat, value, 1.0)
+	if err := st.client.Gauge(stat, value, 1.0); err != nil {
+		st.logger.Errorw("Could not aggregate stats", "error", err.Error())
+	}
 }
 
-func (st *kstats) Increment(stat string, value int64) error {
+func (st *kstats) Increment(stat string, value int64) {
 
-	return st.client.Inc(stat, value, 1.0)
+	if err := st.client.Inc(stat, value, 1.0); err != nil {
+		st.logger.Errorw("Could not aggregate stats", "error", err.Error())
+	}
 }
 
-func (st *kstats) Timing(stat string, delta int64) error {
+func (st *kstats) Timing(stat string, delta int64) {
 
-	return st.client.Timing(stat, delta, 1.0)
+	if err := st.client.Timing(stat, delta, 1.0); err != nil {
+		st.logger.Errorw("Could not aggregate stats", "error", err.Error())
+	}
 }
 
-func (st *kstats) TimingDuration(stat string, delta time.Duration) error {
+func (st *kstats) TimingDuration(stat string, delta time.Duration) {
 
-	return st.client.TimingDuration(stat, delta, 1.0)
+	if err := st.client.TimingDuration(stat, delta, 1.0); err != nil {
+		st.logger.Errorw("Could not aggregate stats", "error", err.Error())
+	}
 }
