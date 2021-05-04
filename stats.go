@@ -36,14 +36,15 @@ type (
 func (mt *kstats) connect() error {
 	var err error
 
-	mt.logger.Infow("STATSD - initializing statsd connection")
-
 	if mt.cfg.Env == "" {
 		return fmt.Errorf("EnvService property must not be empty")
 	}
 
 	statsdAddress := fmt.Sprintf("%s:%d", mt.cfg.Host, mt.cfg.Port)
-	mt.client, err = statsd.NewClient(statsdAddress, fmt.Sprintf("%s.%s", mt.cfg.Service, mt.cfg.Env))
+
+	mt.logger.Infow("STATSD - initializing statsd connection", "address", statsdAddress)
+
+	mt.client, err = statsd.NewClient(statsdAddress, "test")
 
 	if err != nil {
 		/* If nothing is listening on the target port, an error is returned and
