@@ -44,7 +44,7 @@ func New(cfg *Config, logger *logger.Logger) (Stats, func(), error) {
 
 	conf := &statsd.ClientConfig{
 		Address: strings.ToLower(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)),
-		Prefix:  strings.ToLower(fmt.Sprintf("%s.%s.", cfg.Env, cfg.Service)),
+		Prefix:  strings.ToLower(fmt.Sprintf("%s.%s", cfg.Env, cfg.Service)),
 	}
 	log.Println("creating stats connection to ->", conf.Address)
 	client, err := statsd.NewClientWithConfig(conf)
