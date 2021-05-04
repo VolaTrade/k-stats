@@ -2,8 +2,6 @@ package stats
 
 import (
 	"fmt"
-	"log"
-	"strings"
 	"time"
 
 	"github.com/cactus/go-statsd-client/v4/statsd"
@@ -29,43 +27,48 @@ type (
 	}
 
 	kstats struct {
-		client statsd.Statter
+		client statsd.StatSender
 		cfg    *Config
 		logger *logger.Logger
 	}
 )
 
-func New(cfg *Config, logger *logger.Logger) (Stats, func(), error) {
+func (mt *kstats) connect() error {
+	var err error
 
-	if cfg.Env == "DEV" {
+	mt.logger.Infow("STATSD - initializing statsd connection")
 
-		return NewNoop()
+	if mt.cfg.Env == "" {
+		return fmt.Errorf("EnvService property must not be empty")
 	}
 
-	conf := &statsd.ClientConfig{
-		Address: strings.ToLower(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)),
-	}
-	log.Println("creating stats connection to ->", conf.Address)
-	client, err := statsd.NewClientWithConfig(conf)
+	statsdAddress := fmt.Sprintf("%s:%d", mt.cfg.Host, mt.cfg.Port)
+	mt.client, err = statsd.NewClient(statsdAddress, fmt.Sprintf("%s.%s", mt.cfg.Service, mt.cfg.Env))
+
 	if err != nil {
-		return nil, nil, err
+		/* If nothing is listening on the target port, an error is returned and
+		the returned client does nothing but is still usable. So we can just log
+		the error and go on. */
+		mt.logger.Errorw("STATSD - failure when initializing statsd client", "error", err.Error())
+		return err
 	}
-	end := func() {
+	return nil
+}
 
-		if client != nil {
-			if err := client.Close(); err != nil {
-				log.Fatalf("Error closing new stats client: %v", err)
-			}
-			log.Println("K-stats client successful shutdown")
-		}
+func New(cfg *Config, logger *logger.Logger) (Stats, error) {
+	stz := &kstats{cfg: cfg, logger: logger}
+
+	if err := stz.connect(); err != nil {
+		return nil, err
+
 	}
 
-	return &kstats{client: client, cfg: cfg, logger: logger}, end, nil
+	return stz, nil
 }
 
 func (st *kstats) Clone() (Stats, error) {
 
-	clone, _, err := New(st.cfg, st.logger)
+	clone, err := New(st.cfg, st.logger)
 
 	if err != nil {
 		return nil, err
